@@ -241,19 +241,18 @@
             const audioUrl = await getAudioUrl(word);
             if (audioUrl) {
                 const audio = new Audio(audioUrl);
-                audio.play();
+                await audio.play();
             } else {
                 const utterance = new SpeechSynthesisUtterance(word);
                 window.speechSynthesis.speak(utterance);
             }
         }
 
-        window.displayWord = async function() {
+        async function displayWord() {
             if (words.length === 0) return;
             const word = words[currentWordIndex].word;
             const wordIndex = words[currentWordIndex].index + 1;
 
-            playWord(word);
             document.getElementById('wordNumber').innerText = `单词序列号： ${wordIndex} out of ${totalNumberOfWords} Words`;
             document.getElementById('spellingInput').value = '';
             document.getElementById('spellingInput').focus();
@@ -263,9 +262,11 @@
 
             const definition = await getDefinition(word);
             document.getElementById('wordDefinition').innerText = definition;
-        };
 
-        window.checkSpelling = async function() {
+            await playWord(word);
+        }
+
+        async function checkSpelling() {
             const input = document.getElementById('spellingInput').value.trim().toLowerCase();
             const word = words[currentWordIndex].word.toLowerCase();
             const resultElement = document.getElementById('result');
@@ -302,7 +303,7 @@
                     updateGroupStatsAfterSave();
                 });
             }
-        };
+        }
 
         function checkIfAllTestsCompleted() {
             const totalTestsSet = new Set(words.map(word => word.totalTests));
@@ -450,6 +451,6 @@
         <p>恭喜你完成这组单词的第一次测试！</p>
         <button onclick="window.location.href='index.html'">返回首页</button>
     </div>
-    <div id="version">Voice from Merriam-Webster01</div>
+    <div id="version">Voice from Merriam-Webster</div>
 </body>
 </html>
