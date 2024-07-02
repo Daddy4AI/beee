@@ -109,8 +109,7 @@
         let todayTestedCount = 0;
         const testedWordsToday = new Set();
         const incorrectWordsSet = new Set();
-        let groupNumber = null;
-        const totalNumberOfWords = 70; // Adjust this value to the total number of words in your word list
+        let totalNumberOfWords = 0;
         const apiKey = '4c841aa5-4903-4de1-80d6-b81c397935a9';
 
         window.displayWord = async function() {
@@ -132,80 +131,63 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const wordsToTest = JSON.parse(localStorage.getItem('wordsToTest')) || [];
-            if (wordsToTest.length > 0) {
-                loadWordsFromStorage(wordsToTest);
-            } else {
-                const wordListRef = ref(database, 'wordlist');
-                const testResultsRef = ref(database, 'testResults');
-                const wordReviewRef = ref(database, 'wordreview');
-                const todayDate = new Date().toISOString().split('T')[0];
-
-                get(wordListRef).then(snapshot => {
-                    const allWords = snapshot.val() || [];
-                    let groupWords;
-
-                    groupWords = allWords.slice(0, totalNumberOfWords); // Adjust as necessary to get the correct slice of words
-                    loadWords(groupWords, testResultsRef, todayDate, allWords);
-                }).catch(error => {
-                    console.error("Error getting data: ", error);
-                });
-            }
+            fetchWordData();
         });
 
-        function loadWordsFromStorage(wordsToTest) {
+        async function fetchWordData() {
             const wordListRef = ref(database, 'wordlist');
+            const wordReviewRef = ref(database, 'wordreview');
             const testResultsRef = ref(database, 'testResults');
-            get(wordListRef).then(snapshot => {
-                const allWords = snapshot.val() || [];
-                words = wordsToTest.map(word => {
-                    const wordIndex = allWords.indexOf(word);
-                    return { word, index: wordIndex, correctCount: 0, incorrectCount: 0, totalTests: 0, lastTested: null };
-                });
-                displayWord();
-            });
+            const todayDate = new Date().toISOString().split('T')[0];
+
+            // Fetch wordlist and wordreview
+            const [wordListSnapshot, wordReviewSnapshot] = await Promise.all([
+                get(wordListRef),
+                get(wordReviewRef)
+            ]);
+
+            const wordList = wordListSnapshot.val() || [];
+            const wordReview = wordReviewSnapshot.val() || [];
+            totalNumberOfWords = wordList.length;
+
+            // Fetch test results
+            const wordDataPromises = wordList.map((word, index) => get(child(testResultsRef, word)).then(snapshot => {
+                const resultData = snapshot.val() || { correctCount: 0, incorrectCount: 0, totalTests: 0, lastTested: null };
+                return { word, index, ...resultData };
+            }));
+
+            const wordReviewDataPromises = wordReview.map((word, index) => get(child(testResultsRef, word)).then(snapshot => {
+                const resultData = snapshot.val() || { correctCount: 0, incorrectCount: 0, totalTests: 0, lastTested: null };
+                return { word, index, ...resultData };
+            }));
+
+            const [wordData, wordReviewData] = await Promise.all([
+                Promise.all(wordDataPromises),
+                Promise.all(wordReviewDataPromises)
+            ]);
+
+            // Filter and sort the wordData and wordReviewData
+            const sortedWordList = sortWords(wordData);
+            const sortedWordReview = sortWords(wordReviewData);
+
+            // Remove words already tested today
+            const availableWordList = sortedWordList.filter(word => !(word.lastTested && word.lastTested.startsWith(todayDate)));
+            const availableWordReview = sortedWordReview.filter(word => !(word.lastTested && word.lastTested.startsWith(todayDate)));
+
+            // Fetch 50 words from wordlist and 20 words from wordreview
+            const newWords = availableWordList.slice(0, 50);
+            const reviewWords = availableWordReview.slice(0, 20);
+
+            words = [...newWords, ...reviewWords];
+            displayWord();
         }
 
-        async function loadWords(groupWords, testResultsRef, todayDate, allWords) {
-            Promise.all(groupWords.map((word, index) => {
-                return get(child(testResultsRef, word)).then(resultSnapshot => {
-                    const resultData = resultSnapshot.val() || { correctCount: 0, incorrectCount: 0, totalTests: 0, lastTested: null };
-                    if (resultData.lastTested && resultData.lastTested.startsWith(todayDate)) {
-                        testedWordsToday.add(word);
-                    }
-                    const originalIndex = allWords.indexOf(word);
-                    return { word, index: originalIndex, ...resultData };
-                });
-            })).then(wordData => {
-                words = wordData.sort((a, b) => {
-                    if (a.totalTests === 0 && b.totalTests === 0) {
-                        return a.index - b.index;
-                    }
-                    if (a.totalTests === 0) return -1;
-                    if (b.totalTests === 0) return 1;
-                    if (a.incorrectCount > 0 && b.incorrectCount > 0) {
-                        return new Date(a.lastTested) - new Date(b.lastTested);
-                    }
-                    if (a.incorrectCount > 0) return -1;
-                    if (b.incorrectCount > 0) return 1;
-                    return new Date(a.lastTested) - new Date(b.lastTested);
-                });
-
-                const testedWords = words.filter(w => w.totalTests > 0).length;
-                const notTestedWords = words.length - testedWords;
-                const lastTested = words.reduce((latest, w) => {
-                    if (w.lastTested && (!latest || new Date(w.lastTested) > new Date(latest))) {
-                        return w.lastTested;
-                    }
-                    return latest;
-                }, null);
-
-                todayTestedCount = testedWordsToday.size;
-
-                const lastTestedFormatted = lastTested ? new Date(lastTested).toLocaleString('en-GB', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',', '') : 'N/A';
-
-                updateGroupStats(testedWords, notTestedWords, todayTestedCount, lastTestedFormatted);
-                displayWord();
+        function sortWords(words) {
+            return words.sort((a, b) => {
+                if (a.totalTests !== b.totalTests) return a.totalTests - b.totalTests;
+                if (a.incorrectCount !== b.incorrectCount) return b.incorrectCount - a.incorrectCount;
+                if (a.index !== b.index) return a.index - b.index;
+                return new Date(a.lastTested) - new Date(b.lastTested);
             });
         }
 
@@ -451,6 +433,6 @@
         <p>恭喜你完成这组单词的第一次测试！</p>
         <button onclick="window.location.href='index.html'">返回首页</button>
     </div>
-    <div id="version">Voice from Merriam-Webster02</div>
+    <div id="version">Voice from Merriam-Webster001</div>
 </body>
 </html>
