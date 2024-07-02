@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Spelling Test - Group #</title>
+    <title>Spelling Test - Group</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <style>
         body {
@@ -125,30 +125,49 @@
                 document.title = `Spelling Test - Group ${groupNumber}`;
                 document.getElementById('groupNumber').innerText = groupNumber;
             }
-            const wordListRef = ref(database, 'wordlist');
-            const testResultsRef = ref(database, 'testResults');
-            const wordReviewRef = ref(database, 'wordreview');
-            const todayDate = new Date().toISOString().split('T')[0];
 
-            get(wordListRef).then(snapshot => {
-                const allWords = snapshot.val() || [];
-                let groupWords;
+            const wordsToTest = JSON.parse(localStorage.getItem('wordsToTest')) || [];
+            if (wordsToTest.length > 0) {
+                loadWordsFromStorage(wordsToTest);
+            } else {
+                const wordListRef = ref(database, 'wordlist');
+                const testResultsRef = ref(database, 'testResults');
+                const wordReviewRef = ref(database, 'wordreview');
+                const todayDate = new Date().toISOString().split('T')[0];
 
-                if (groupNumber === 'Review') {
-                    get(wordReviewRef).then(reviewSnapshot => {
-                        groupWords = reviewSnapshot.val() || [];
+                get(wordListRef).then(snapshot => {
+                    const allWords = snapshot.val() || [];
+                    let groupWords;
+
+                    if (groupNumber === 'Review') {
+                        get(wordReviewRef).then(reviewSnapshot => {
+                            groupWords = reviewSnapshot.val() || [];
+                            loadWords(groupWords, testResultsRef, todayDate, allWords);
+                        });
+                    } else {
+                        groupWords = allWords.slice((groupNumber - 1) * 100, groupNumber * 100);
                         loadWords(groupWords, testResultsRef, todayDate, allWords);
-                    });
-                } else {
-                    groupWords = allWords.slice((groupNumber - 1) * 100, groupNumber * 100);
-                    loadWords(groupWords, testResultsRef, todayDate, allWords);
-                }
-            }).catch(error => {
-                console.error("Error getting data: ", error);
-            });
+                    }
+                }).catch(error => {
+                    console.error("Error getting data: ", error);
+                });
+            }
         });
 
-        function loadWords(groupWords, testResultsRef, todayDate, allWords) {
+        function loadWordsFromStorage(wordsToTest) {
+            const wordListRef = ref(database, 'wordlist');
+            const testResultsRef = ref(database, 'testResults');
+            get(wordListRef).then(snapshot => {
+                const allWords = snapshot.val() || [];
+                words = wordsToTest.map(word => {
+                    const wordIndex = allWords.indexOf(word);
+                    return { word, index: wordIndex, correctCount: 0, incorrectCount: 0, totalTests: 0, lastTested: null };
+                });
+                displayWord();
+            });
+        }
+
+        async function loadWords(groupWords, testResultsRef, todayDate, allWords) {
             Promise.all(groupWords.map((word, index) => {
                 return get(child(testResultsRef, word)).then(resultSnapshot => {
                     const resultData = resultSnapshot.val() || { correctCount: 0, incorrectCount: 0, totalTests: 0, lastTested: null };
