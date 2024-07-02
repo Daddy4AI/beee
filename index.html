@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Zoe's Vocabulary Exercise</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            font-size: 16px;
+            padding: 10px 20px;
+            margin: 5px;
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+        import { getDatabase, ref, get, child } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js';
+        import firebaseConfig from './firebaseConfig.js';
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        let wordList = [];
+        let wordReview = [];
+        const numNewWord = 50;
+        const numReviewWord = 20;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await fetchData();
+            displayProgressReview();
+        });
+
+        async function fetchData() {
+            const wordListRef = ref(database, 'wordlist');
+            const testResultsRef = ref(database, 'testResults');
+            const wordReviewRef = ref(database, 'wordreview');
+
+            const [wordListSnapshot, reviewSnapshot] = await Promise.all([
+                get(wordListRef),
+                get(wordReviewRef)
+            ]);
+
+            const allWords = wordListSnapshot.val() || [];
+            wordReview = reviewSnapshot.val() || [];
+
+            const wordDataPromises = allWords.map((word, index) => get(child(testResultsRef, word)).then(snapshot => {
+                const resultData = snapshot.val() || { correctCount: 0, incorrectCount: 0, totalTests: 0, lastTested: null };
+                return { word, index, ...resultData };
+            }));
+
+            const wordReviewDataPromises = wordReview.map((word, index) => get(child(testResultsRef, word)).then(snapshot => {
+                const resultData = snapshot.val() || { correctCount: 0, incorrectCount: 0, totalTests: 0, lastTested: null };
+                return { word, index, ...resultData };
+            }));
+
+            wordList = await Promise.all(wordDataPromises);
+            wordReview = await Promise.all(wordReviewDataPromises);
+        }
+
+        function sortWords(words) {
+            return words.sort((a, b) => {
+                if (a.totalTests !== b.totalTests) return a.totalTests - b.totalTests;
+                if (a.incorrectCount !== b.incorrectCount) return b.incorrectCount - a.incorrectCount;
+                if (a.index !== b.index) return a.index - b.index;
+                return new Date(a.lastTested) - new Date(b.lastTested);
+            });
+        }
+
+        function displayProgressReview() {
+            const stats = {};
+            wordList.forEach(word => {
+                stats[word.totalTests] = (stats[word.totalTests] || 0) + 1;
+            });
+
+            const table = document.getElementById('progressReviewTable');
+            table.innerHTML = '<tr><th>Total Tests</th><th>Number of Words</th></tr>';
+
+            Object.keys(stats).forEach(totalTests => {
+                const row = table.insertRow();
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+                cell1.textContent = `${totalTests} 次`;
+                cell2.textContent = stats[totalTests];
+            });
+
+            displayTestDates();
+        }
+
+        function displayTestDates() {
+            const dates = {};
+            wordList.forEach(word => {
+                const date = word.lastTested ? word.lastTested.split('T')[0] : 'N/A';
+                dates[date] = (dates[date] || 0) + 1;
+            });
+
+            const table = document.getElementById('testDatesTable');
+            table.innerHTML = '<tr><th>Test Date</th><th>Number of Words</th></tr>';
+
+            Object.keys(dates).forEach(date => {
+                const row = table.insertRow();
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+                cell1.textContent = date;
+                cell2.textContent = dates[date];
+            });
+        }
+
+        window.viewWords = function() {
+            const sortedWordList = sortWords(wordList);
+            const sortedWordReview = sortWords(wordReview);
+
+            const newWords = sortedWordList.slice(0, numNewWord);
+            const reviewWords = sortedWordReview.slice(0, numReviewWord);
+            const wordsToShow = [...newWords, ...reviewWords];
+
+            const table = document.getElementById('wordTable');
+            table.innerHTML = '<tr><th>Index</th><th>Word</th><th>Dictionary</th><th>Number of Tests</th></tr>';
+
+            wordsToShow.forEach(word => {
+                const row = table.insertRow();
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+                const cell3 = row.insertCell(2);
+                const cell4 = row.insertCell(3);
+                cell1.textContent = word.index + 1;
+                cell2.textContent = word.word;
+                cell3.innerHTML = `<a href="https://www.merriam-webster.com/dictionary/${word.word}" target="_blank">Dictionary</a>`;
+                cell4.textContent = `${word.correctCount}/${word.incorrectCount}/${word.totalTests}`;
+            });
+        };
+
+        window.startTest = function() {
+            const sortedWordList = sortWords(wordList);
+            const sortedWordReview = sortWords(wordReview);
+
+            const newWords = sortedWordList.slice(0, numNewWord);
+            const reviewWords = sortedWordReview.slice(0, numReviewWord);
+            const wordsToTest = [...newWords, ...reviewWords].map(word => word.word);
+
+            localStorage.setItem('wordsToTest', JSON.stringify(wordsToTest));
+            window.location.href = 'spelling.html';
+        };
+    </script>
+</head>
+<body>
+    <h1>Zoe's Vocabulary Exercise</h1>
+
+    <section>
+        <h2>Today's Task</h2>
+        <div class="button-container">
+            <button onclick="viewWords()">View Words</button>
+            <button onclick="startTest()">Start Test</button>
+        </div>
+        <table id="wordTable"></table>
+    </section>
+
+    <section>
+        <h2>Progress Review</h2>
+        <table id="progressReviewTable"></table>
+        <h2>Test Dates</h2>
+        <table id="testDatesTable"></table>
+    </section>
+</body>
+</html>
