@@ -32,6 +32,11 @@
             padding: 10px 20px;
             margin: 5px;
         }
+        #loading {
+            text-align: center;
+            font-size: 20px;
+            margin-top: 20px;
+        }
     </style>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
@@ -46,7 +51,9 @@
         const numReviewWord = 20;
 
         document.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('loading').style.display = 'block';
             await fetchData();
+            document.getElementById('loading').style.display = 'none';
             displayProgressReview();
         });
 
@@ -113,10 +120,11 @@
                 dates[date] = (dates[date] || 0) + 1;
             });
 
+            const sortedDates = Object.keys(dates).sort((a, b) => new Date(b) - new Date(a));
             const table = document.getElementById('testDatesTable');
             table.innerHTML = '<tr><th>Test Date</th><th>Number of Words</th></tr>';
 
-            Object.keys(dates).forEach(date => {
+            sortedDates.forEach(date => {
                 const row = table.insertRow();
                 const cell1 = row.insertCell(0);
                 const cell2 = row.insertCell(1);
@@ -164,6 +172,8 @@
 </head>
 <body>
     <h1>Zoe's Vocabulary Exercise</h1>
+
+    <div id="loading">Loading data...</div>
 
     <section>
         <h2>Today's Task</h2>
