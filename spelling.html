@@ -113,6 +113,24 @@
         const totalNumberOfWords = 70; // Adjust this value to the total number of words in your word list
         const apiKey = '4c841aa5-4903-4de1-80d6-b81c397935a9';
 
+        window.displayWord = async function() {
+            if (words.length === 0) return;
+            const word = words[currentWordIndex].word;
+            const wordIndex = words[currentWordIndex].index + 1;
+
+            document.getElementById('wordNumber').innerText = `单词序列号： ${wordIndex} out of ${totalNumberOfWords} Words`;
+            document.getElementById('spellingInput').value = '';
+            document.getElementById('spellingInput').focus();
+            document.getElementById('result').innerText = '';
+            document.getElementById('exampleSentence').innerText = '';
+            document.getElementById('playWordButton').innerText = 'Play Word';
+
+            const definition = await getDefinition(word);
+            document.getElementById('wordDefinition').innerText = definition;
+
+            await playWord(word);
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const wordsToTest = JSON.parse(localStorage.getItem('wordsToTest')) || [];
             if (wordsToTest.length > 0) {
@@ -246,24 +264,6 @@
                 const utterance = new SpeechSynthesisUtterance(word);
                 window.speechSynthesis.speak(utterance);
             }
-        }
-
-        async function displayWord() {
-            if (words.length === 0) return;
-            const word = words[currentWordIndex].word;
-            const wordIndex = words[currentWordIndex].index + 1;
-
-            document.getElementById('wordNumber').innerText = `单词序列号： ${wordIndex} out of ${totalNumberOfWords} Words`;
-            document.getElementById('spellingInput').value = '';
-            document.getElementById('spellingInput').focus();
-            document.getElementById('result').innerText = '';
-            document.getElementById('exampleSentence').innerText = '';
-            document.getElementById('playWordButton').innerText = 'Play Word';
-
-            const definition = await getDefinition(word);
-            document.getElementById('wordDefinition').innerText = definition;
-
-            await playWord(word);
         }
 
         async function checkSpelling() {
