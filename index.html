@@ -80,6 +80,7 @@
         let wordsTobedone = totalWordsToday;
         let newwordsTobedone = totalNewWords;
         let reviewWordsTobedone = totalReviewWords;
+        let wordTableVisible = false;
 
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('loading').style.display = 'block';
@@ -152,7 +153,9 @@
         window.updateReviewPer = function(value) {
             reviewPer = parseInt(value);
             updateStats();
-            viewWords();
+            if (wordTableVisible) {
+                viewWords();
+            }
         }
 
         function displayProgressReview() {
@@ -196,27 +199,33 @@
         }
 
         window.viewWords = function() {
-            const sortedWordList = sortWords(wordList);
-            const sortedWordReview = sortWords(wordReview);
+            const wordTable = document.getElementById('wordTable');
+            if (wordTableVisible) {
+                wordTable.innerHTML = '';
+                wordTableVisible = false;
+            } else {
+                const sortedWordList = sortWords(wordList);
+                const sortedWordReview = sortWords(wordReview);
 
-            const newWords = sortedWordList.slice(0, newwordsTobedone);
-            const reviewWords = sortedWordReview.slice(0, reviewWordsTobedone);
-            const wordsToShow = [...newWords, ...reviewWords];
+                const newWords = sortedWordList.slice(0, newwordsTobedone);
+                const reviewWords = sortedWordReview.slice(0, reviewWordsTobedone);
+                const wordsToShow = [...newWords, ...reviewWords];
 
-            const table = document.getElementById('wordTable');
-            table.innerHTML = '<tr><th>Index</th><th>Word</th><th>Dictionary</th><th>Number of Tests</th></tr>';
+                wordTable.innerHTML = '<tr><th>Index</th><th>Word</th><th>Dictionary</th><th>Number of Tests</th></tr>';
 
-            wordsToShow.forEach(word => {
-                const row = table.insertRow();
-                const cell1 = row.insertCell(0);
-                const cell2 = row.insertCell(1);
-                const cell3 = row.insertCell(2);
-                const cell4 = row.insertCell(3);
-                cell1.textContent = word.index + 1;
-                cell2.textContent = word.word;
-                cell3.innerHTML = `<a href="https://www.merriam-webster.com/dictionary/${word.word}" target="_blank">Dictionary</a>`;
-                cell4.textContent = `${word.correctCount}/${word.incorrectCount}/${word.totalTests}`;
-            });
+                wordsToShow.forEach(word => {
+                    const row = wordTable.insertRow();
+                    const cell1 = row.insertCell(0);
+                    const cell2 = row.insertCell(1);
+                    const cell3 = row.insertCell(2);
+                    const cell4 = row.insertCell(3);
+                    cell1.textContent = word.index + 1;
+                    cell2.textContent = word.word;
+                    cell3.innerHTML = `<a href="https://www.merriam-webster.com/dictionary/${word.word}" target="_blank">Dictionary</a>`;
+                    cell4.textContent = `${word.correctCount}/${word.incorrectCount}/${word.totalTests}`;
+                });
+                wordTableVisible = true;
+            }
         };
 
         window.startTest = function() {
