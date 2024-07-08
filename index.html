@@ -244,6 +244,8 @@
                     cell3.innerHTML = `<a href="https://www.merriam-webster.com/dictionary/${word.word}" target="_blank">Dictionary</a>`;
                     cell4.textContent = `${word.correctCount}/${word.incorrectCount}/${word.totalTests}`;
                 });
+
+                localStorage.setItem('wordsToShow', JSON.stringify(wordsToShow)); // Store the sorted words in local storage
                 wordTableVisible = true;
             }
         };
