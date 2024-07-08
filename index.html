@@ -126,7 +126,7 @@
             document.getElementById('reviewWordsTobedone').innerText = `${reviewWordsTobedone}`;
         }
 
-        window.function updateReviewPer(value) {
+        window.updateReviewPer = function(value) {
             reviewPer = parseInt(value);
             updateStats();
             viewWords();
