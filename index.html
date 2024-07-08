@@ -4,8 +4,28 @@
     <title>Zoe's Vocabulary Exercise</title>
     <style>
         body {
+            margin: 0;
             font-family: Arial, sans-serif;
-            margin: 20px;
+        }
+        #cover {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('pics/cover.jpg') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            text-align: center;
+            z-index: 10;
+        }
+        #mainContent {
+            display: none;
+            padding: 20px;
         }
         h1, h2 {
             text-align: center;
@@ -239,68 +259,79 @@
             localStorage.setItem('wordsToTest', JSON.stringify(wordsToTest));
             window.location.href = 'spelling.html';
         };
+
+        window.loadMainContent = function() {
+            document.getElementById('cover').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }
     </script>
 </head>
 <body>
-    <h1>Zoe's Vocabulary Exercise</h1>
+    <div id="cover" onclick="loadMainContent()">
+        欢迎 Z 回来词汇训练
+    </div>
 
-    <div id="loading">Loading data...</div>
+    <div id="mainContent">
+        <h1>Zoe's Vocabulary Exercise</h1>
 
-    <section>
-        <h2>Today's Task</h2>
-        <table id="taskTable">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Total</th>
-                    <th>New</th>
-                    <th>Review</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Task</td>
-                    <td id="totalTask">50</td>
-                    <td id="newWordsTask">40</td>
-                    <td id="reviewWordsTask">10</td>
-                </tr>
-                <tr>
-                    <td>Completed</td>
-                    <td id="completedToday">0</td>
-                    <td id="newWordsComp">0</td>
-                    <td id="reviewWordsComp">0</td>
-                </tr>
-                <tr>
-                    <td>To Be Done</td>
-                    <td id="toBeDone">50</td>
-                    <td id="newWordsTobedone">40</td>
-                    <td id="reviewWordsTobedone">10</td>
-                </tr>
-            </tbody>
-        </table>
-        <div class="stats-container">
-            <p>Total Review Words Percentage:
-                <select onchange="updateReviewPer(this.value)">
-                    <option value="0">0%</option>
-                    <option value="20" selected>20%</option>
-                    <option value="30">30%</option>
-                    <option value="40">40%</option>
-                    <option value="50">50%</option>
-                </select>
-            </p>
-        </div>
-        <div class="button-container">
-            <button onclick="viewWords()">View Words</button>
-            <button onclick="startTest()">Start Test</button>
-        </div>
-        <table id="wordTable"></table>
-    </section>
+        <div id="loading">Loading data...</div>
 
-    <section>
-        <h2>Progress Review</h2>
-        <table id="progressReviewTable"></table>
-        <h2>Test Dates</h2>
-        <table id="testDatesTable"></table>
-    </section>
+        <section>
+            <h2>Today's Task</h2>
+            <table id="taskTable">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Total</th>
+                        <th>New</th>
+                        <th>Review</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Task</td>
+                        <td id="totalTask">50</td>
+                        <td id="newWordsTask">40</td>
+                        <td id="reviewWordsTask">10</td>
+                    </tr>
+                    <tr>
+                        <td>Completed</td>
+                        <td id="completedToday">0</td>
+                        <td id="newWordsComp">0</td>
+                        <td id="reviewWordsComp">0</td>
+                    </tr>
+                    <tr>
+                        <td>To Be Done</td>
+                        <td id="toBeDone">50</td>
+                        <td id="newWordsTobedone">40</td>
+                        <td id="reviewWordsTobedone">10</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="stats-container">
+                <p>Total Review Words Percentage:
+                    <select onchange="updateReviewPer(this.value)">
+                        <option value="0">0%</option>
+                        <option value="20" selected>20%</option>
+                        <option value="30">30%</option>
+                        <option value="40">40%</option>
+                        <option value="50">50%</option>
+                    </select>
+                </p>
+            </div>
+            <div class="button-container">
+                <button onclick="viewWords()">View Words</button>
+                <button onclick="startTest()">Start Test</button>
+            </div>
+            <table id="wordTable"></table>
+        </section>
+
+        <section>
+            <h2>Progress Review</h2>
+            <table id="progressReviewTable"></table>
+            <h2>Test Dates</h2>
+            <table id="testDatesTable"></table>
+        </section>
+    </div>
 </body>
 </html>
