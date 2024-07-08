@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Spelling Test - Group #</title>
+    <title>Spelling Bee</title>
     <style>
         body {
             display: flex;
@@ -146,11 +146,11 @@
             const group = urlParams.get('group');
             if (group === 'Review') {
                 groupNumber = 'Review';
-                document.title = `Spelling Test - Group Review`;
+                document.title = `Spelling Bee - Group Review`;
                 document.getElementById('groupNumber').innerText = 'Review';
             } else {
                 groupNumber = parseInt(group);
-                document.title = `Spelling Test - Group ${groupNumber}`;
+                document.title = `Spelling Bee - Group ${groupNumber}`;
                 document.getElementById('groupNumber').innerText = groupNumber;
             }
 
@@ -210,7 +210,7 @@
 
             const lastTestedFormatted = lastTested ? new Date(lastTested).toLocaleString('en-GB', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',', '') : 'N/A';
 
-            updateGroupStats(testedWords, notTestedWords, todayTestedCount, lastTestedFormatted);
+            updateGroupStats(testedWords, notTestedWords);
             displayWord();
         }
 
@@ -280,11 +280,11 @@
         window.displayWord = async function() {
             if (words.length === 0) return;
             const word = words[currentWordIndex].word;
-            const wordIndex = currentWordIndex + 1; // 修改这里
+            const wordIndex = currentWordIndex + 1 + todayTestedCount; // 修改这里
             const groupRelativeIndex = wordIndex;
 
             playWord(word);
-            document.getElementById('wordNumber').innerText = `单词序列号: ${groupRelativeIndex} out of ${words.length} words`;
+            document.getElementById('wordNumber').innerText = `单词序列号: ${groupRelativeIndex} out of ${words.length + todayTestedCount} words`;
             document.getElementById('spellingInput').value = '';
             document.getElementById('spellingInput').focus();
             document.getElementById('result').innerText = '';
@@ -350,8 +350,7 @@
                 }
                 return latest;
             }, null);
-            const lastTestedFormatted = lastTested ? new Date(lastTested).toLocaleString('en-GB', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',', '') : 'N/A';
-            updateGroupStats(testedWords, notTestedWords, todayTestedCount, lastTestedFormatted);
+            updateGroupStats(testedWords, notTestedWords);
         }
 
         window.retryWord = function() {
@@ -364,7 +363,7 @@
             document.getElementById('playWordButton').innerText = 'Play Word';
         };
 
-        window.updateGroupStats = function(testedWords, notTestedWords, todayTestedCount, lastTestedFormatted) {
+        window.updateGroupStats = function(testedWords, notTestedWords) {
             const totalTestsMap = new Map();
             words.forEach(word => {
                 if (totalTestsMap.has(word.totalTests)) {
@@ -391,8 +390,6 @@
                         ${tableRows.join('')}
                     </tbody>
                 </table>
-                <p>今天测试单词数: ${todayTestedCount}</p>
-                <p>最后测试时间: ${lastTestedFormatted}</p>
             `;
         };
 
@@ -460,7 +457,7 @@
     </script>
 </head>
 <body>
-    <h1>Spelling Test - Group <span id="groupNumber"></span></h1>
+    <h1>Spelling Bee - Group <span id="groupNumber"></span></h1>
     <p id="wordNumber">单词序列号: NaN out of 50 words</p>
 
 <div id="controls">
@@ -478,9 +475,9 @@
     <p id="exampleSentence"></p>
     <div id="groupStats"></div>
     <div id="msgBox">
-        <p>恭喜你完成今天的单词测试！</p>
+        <p>恭喜你完成这组单词的测试！</p>
         <button onclick="window.location.href='index.html'">返回首页</button>
     </div>
-    <div id="version">Voice from Merriam-Webster0.4</div>
+    <div id="version">Voice from Merriam-Webster0.2</div>
 </body>
 </html>
