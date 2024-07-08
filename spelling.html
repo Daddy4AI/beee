@@ -133,7 +133,6 @@
         let todayTestedCount = 0;
         const testedWordsToday = new Set();
         const incorrectWordsSet = new Set();
-        let groupNumber = null;
 
         const apiKey = '4c841aa5-4903-4de1-80d6-b81c397935a9';
 
@@ -142,18 +141,6 @@
         let mp3Rate = 0.7;
 
         document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const group = urlParams.get('group');
-            if (group === 'Review') {
-                groupNumber = 'Review';
-                document.title = `Spelling Bee - Group Review`;
-                document.getElementById('groupNumber').innerText = 'Review';
-            } else {
-                groupNumber = parseInt(group);
-                document.title = `Spelling Bee - Group ${groupNumber}`;
-                document.getElementById('groupNumber').innerText = groupNumber;
-            }
-
             const wordsToShow = JSON.parse(localStorage.getItem('wordsToShow'));
             if (wordsToShow) {
                 loadWords(wordsToShow);
@@ -181,15 +168,10 @@
                 const allWords = snapshot.val() || [];
                 let groupWords;
 
-                if (groupNumber === 'Review') {
-                    get(wordReviewRef).then(reviewSnapshot => {
-                        groupWords = reviewSnapshot.val() || [];
-                        loadWords(groupWords, testResultsRef, todayDate, allWords);
-                    });
-                } else {
-                    groupWords = allWords.slice((groupNumber - 1) * 100, groupNumber * 100);
+                get(wordReviewRef).then(reviewSnapshot => {
+                    groupWords = reviewSnapshot.val() || [];
                     loadWords(groupWords, testResultsRef, todayDate, allWords);
-                }
+                });
             }).catch(error => {
                 console.error("Error getting data: ", error);
             });
@@ -199,16 +181,8 @@
             words = sortedWords;
             const testedWords = words.filter(w => w.totalTests > 0).length;
             const notTestedWords = words.length - testedWords;
-            const lastTested = words.reduce((latest, w) => {
-                if (w.lastTested && (!latest || new Date(w.lastTested) > new Date(latest))) {
-                    return w.lastTested;
-                }
-                return latest;
-            }, null);
 
             todayTestedCount = testedWordsToday.size;
-
-            const lastTestedFormatted = lastTested ? new Date(lastTested).toLocaleString('en-GB', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',', '') : 'N/A';
 
             updateGroupStats(testedWords, notTestedWords);
             displayWord();
@@ -280,7 +254,7 @@
         window.displayWord = async function() {
             if (words.length === 0) return;
             const word = words[currentWordIndex].word;
-            const wordIndex = currentWordIndex + 1 + todayTestedCount; // 修改这里
+            const wordIndex = currentWordIndex + 1 + todayTestedCount;
             const groupRelativeIndex = wordIndex;
 
             playWord(word);
@@ -301,7 +275,6 @@
             const resultElement = document.getElementById('result');
             const playWordButton = document.getElementById('playWordButton');
             const now = new Date().toISOString();
-            const todayDate = now.split('T')[0];
 
             if (input === word) {
                 resultElement.innerText = '正确';
@@ -344,12 +317,6 @@
         function updateGroupStatsAfterSave() {
             const testedWords = words.filter(w => w.totalTests > 0).length;
             const notTestedWords = words.length - testedWords;
-            const lastTested = words.reduce((latest, w) => {
-                if (w.lastTested && (!latest || new Date(w.lastTested) > new Date(latest))) {
-                    return w.lastTested;
-                }
-                return latest;
-            }, null);
             updateGroupStats(testedWords, notTestedWords);
         }
 
@@ -457,17 +424,17 @@
     </script>
 </head>
 <body>
-    <h1>Spelling Bee - Group <span id="groupNumber"></span></h1>
+    <h1>Spelling Bee</h1>
     <p id="wordNumber">单词序列号: NaN out of 50 words</p>
 
-<div id="controls">
-    <label for="synthesisRateSlider">Rate:</label>
-    <input type="range" id="synthesisRateSlider" min="0.3" max="0.7" step="0.1" value="0.5">
-    <button id="playWordButton" onclick="displayWord()">Play Word</button>
-    <button id="playMerriamWebsterVoiceButton" onclick="playMerriamWebsterVoice()">Dictionary Voice</button>
-    <label for="mp3RateSlider">Rate:</label>
-    <input type="range" id="mp3RateSlider" min="0.5" max="0.9" step="0.1" value="0.7">
-</div>
+    <div id="controls">
+        <label for="synthesisRateSlider">Rate:</label>
+        <input type="range" id="synthesisRateSlider" min="0.3" max="0.7" step="0.1" value="0.5">
+        <button id="playWordButton" onclick="displayWord()">Play Word</button>
+        <button id="playMerriamWebsterVoiceButton" onclick="playMerriamWebsterVoice()">Dictionary Voice</button>
+        <label for="mp3RateSlider">Rate:</label>
+        <input type="range" id="mp3RateSlider" min="0.5" max="0.9" step="0.1" value="0.7">
+    </div>
 
     <p id="wordDefinition"></p> <!-- Definition will be displayed here -->
     <input type="text" id="spellingInput" autocomplete="off" autocorrect="off" spellcheck="false">
