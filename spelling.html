@@ -22,14 +22,14 @@
         }
 
         #controls {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 70%;
-          margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 70%;
+            margin-top: 10px;
         }
         #controls label, #controls input, #controls button {
-          margin: 0 10px;
+            margin: 0 10px;
         }
 
         #wordNumber {
@@ -280,8 +280,8 @@
         window.displayWord = async function() {
             if (words.length === 0) return;
             const word = words[currentWordIndex].word;
-            const wordIndex = words[currentWordIndex].index + 1;
-            const groupRelativeIndex = groupNumber === 'Review' ? wordIndex : wordIndex - (groupNumber - 1) * 100;
+            const wordIndex = currentWordIndex + 1; // 修改这里
+            const groupRelativeIndex = wordIndex;
 
             playWord(word);
             document.getElementById('wordNumber').innerText = `单词序列号: ${groupRelativeIndex} out of ${words.length} words`;
@@ -320,7 +320,7 @@
                         setTimeout(displayWord, 3000);
                     } else {
                         saveIncorrectWords();
-                        checkIfAllTestsCompleted();
+                        showCompletionMessage();
                     }
                 });
             } else {
@@ -334,12 +334,11 @@
             }
         };
 
-        function checkIfAllTestsCompleted() {
-            const totalTestsSet = new Set(words.map(word => word.totalTests));
-            if (totalTestsSet.size === 1) {
-                const totalTests = [...totalTestsSet][0];
-                showCompletionMessage(totalTests);
-            }
+        function showCompletionMessage() {
+            const msgBox = document.getElementById('msgBox');
+            msgBox.innerHTML = `<p>恭喜你完成这组单词的测试！</p>
+                                <button onclick="window.location.href='index.html'">返回首页</button>`;
+            msgBox.style.display = 'block';
         }
 
         function updateGroupStatsAfterSave() {
@@ -395,13 +394,6 @@
                 <p>今天测试单词数: ${todayTestedCount}</p>
                 <p>最后测试时间: ${lastTestedFormatted}</p>
             `;
-        };
-
-        window.showCompletionMessage = function(totalTests) {
-            const msgBox = document.getElementById('msgBox');
-            msgBox.innerHTML = `<p>恭喜你完成这组单词的第${totalTests}次测试！</p>
-                                <button onclick="window.location.href='index.html'">返回首页</button>`;
-            msgBox.style.display = 'block';
         };
 
         window.saveIncorrectWords = function() {
@@ -469,7 +461,7 @@
 </head>
 <body>
     <h1>Spelling Test - Group <span id="groupNumber"></span></h1>
-    <p id="wordNumber"></p>
+    <p id="wordNumber">单词序列号: NaN out of 50 words</p>
 
 <div id="controls">
     <label for="synthesisRateSlider">Rate:</label>
@@ -486,9 +478,9 @@
     <p id="exampleSentence"></p>
     <div id="groupStats"></div>
     <div id="msgBox">
-        <p>恭喜你完成这组单词的第一次测试！</p>
+        <p>恭喜你完成今天的单词测试！</p>
         <button onclick="window.location.href='index.html'">返回首页</button>
     </div>
-    <div id="version">Voice from Merriam-Webster0.2</div>
+    <div id="version">Voice from Merriam-Webster0.4</div>
 </body>
 </html>
