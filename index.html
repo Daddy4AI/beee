@@ -112,13 +112,22 @@
             newwordsTobedone = totalNewWords - newwordsComp;
             reviewWordsTobedone = totalReviewWords - reviewWordsComp;
             wordsTobedone = newwordsTobedone + reviewWordsTobedone;
-            document.getElementById('totalTask').innerText = `${totalWordsToday} / ${totalNewWords} / ${totalReviewWords}`;
-            document.getElementById('completedToday').innerText = `${wordsComp} / ${newwordsComp} / ${reviewWordsComp}`;
-            document.getElementById('toBeDone').innerText = `${wordsTobedone} / ${newwordsTobedone} / ${reviewWordsTobedone}`;
+
+            document.getElementById('totalTask').innerText = `${totalWordsToday}`;
+            document.getElementById('newWordsTask').innerText = `${totalNewWords}`;
+            document.getElementById('reviewWordsTask').innerText = `${totalReviewWords}`;
+
+            document.getElementById('completedToday').innerText = `${wordsComp}`;
+            document.getElementById('newWordsComp').innerText = `${newwordsComp}`;
+            document.getElementById('reviewWordsComp').innerText = `${reviewWordsComp}`;
+
+            document.getElementById('toBeDone').innerText = `${wordsTobedone}`;
+            document.getElementById('newWordsTobedone').innerText = `${newwordsTobedone}`;
+            document.getElementById('reviewWordsTobedone').innerText = `${reviewWordsTobedone}`;
         }
 
         function updateReviewPer(value) {
-            reviewPer = value;
+            reviewPer = parseInt(value);
             updateStats();
         }
 
@@ -218,19 +227,19 @@
             <tbody>
                 <tr>
                     <td>Task</td>
-                    <td id="totalTask">50 / 40 / 10</td>
-                    <td id="totalNewWords">40</td>
-                    <td id="totalReviewWords">10</td>
+                    <td id="totalTask">50</td>
+                    <td id="newWordsTask">40</td>
+                    <td id="reviewWordsTask">10</td>
                 </tr>
                 <tr>
                     <td>Completed</td>
-                    <td id="completedToday">0 / 0 / 0</td>
+                    <td id="completedToday">0</td>
                     <td id="newWordsComp">0</td>
                     <td id="reviewWordsComp">0</td>
                 </tr>
                 <tr>
                     <td>To Be Done</td>
-                    <td id="toBeDone">50 / 40 / 10</td>
+                    <td id="toBeDone">50</td>
                     <td id="newWordsTobedone">40</td>
                     <td id="reviewWordsTobedone">10</td>
                 </tr>
