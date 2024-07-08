@@ -18,7 +18,7 @@
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
-            text-align: left;
+            text-align: center;
         }
         th {
             background-color: #f2f2f2;
@@ -48,9 +48,9 @@
         let wordList = [];
         let wordReview = [];
         let totalWordsToday = 50;
-        let reviewPer = 0;
-        let totalReviewWords = 0;
-        let totalNewWords = totalWordsToday;
+        let reviewPer = 20;
+        let totalReviewWords = Math.floor(totalWordsToday * reviewPer / 100);
+        let totalNewWords = totalWordsToday - totalReviewWords;
         let wordsComp = 0;
         let newwordsComp = 0;
         let reviewWordsComp = 0;
@@ -112,9 +112,6 @@
             newwordsTobedone = totalNewWords - newwordsComp;
             reviewWordsTobedone = totalReviewWords - reviewWordsComp;
             wordsTobedone = newwordsTobedone + reviewWordsTobedone;
-            document.getElementById('totalWordsToday').innerText = totalWordsToday;
-            document.getElementById('totalReviewWords').innerText = totalReviewWords;
-            document.getElementById('totalNewWords').innerText = totalNewWords;
             document.getElementById('totalTask').innerText = `${totalWordsToday} / ${totalNewWords} / ${totalReviewWords}`;
             document.getElementById('completedToday').innerText = `${wordsComp} / ${newwordsComp} / ${reviewWordsComp}`;
             document.getElementById('toBeDone').innerText = `${wordsTobedone} / ${newwordsTobedone} / ${reviewWordsTobedone}`;
@@ -209,26 +206,46 @@
 
     <section>
         <h2>Today's Task</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Total</th>
+                    <th>New</th>
+                    <th>Review</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Task</td>
+                    <td id="totalTask">50 / 40 / 10</td>
+                    <td id="totalNewWords">40</td>
+                    <td id="totalReviewWords">10</td>
+                </tr>
+                <tr>
+                    <td>Completed</td>
+                    <td id="completedToday">0 / 0 / 0</td>
+                    <td id="newWordsComp">0</td>
+                    <td id="reviewWordsComp">0</td>
+                </tr>
+                <tr>
+                    <td>To Be Done</td>
+                    <td id="toBeDone">50 / 40 / 10</td>
+                    <td id="newWordsTobedone">40</td>
+                    <td id="reviewWordsTobedone">10</td>
+                </tr>
+            </tbody>
+        </table>
         <div class="stats-container">
-            <div>
-                <p>Total Words Today: <span id="totalWordsToday">50</span></p>
-                <p>Total Review Words Percentage:
-                    <select onchange="updateReviewPer(this.value)">
-                        <option value="0">0%</option>
-                        <option value="20">20%</option>
-                        <option value="30">30%</option>
-                        <option value="40">40%</option>
-                        <option value="50">50%</option>
-                    </select>
-                </p>
-                <p>Total Review Words: <span id="totalReviewWords">0</span></p>
-                <p>Total New Words: <span id="totalNewWords">50</span></p>
-            </div>
-            <div>
-                <p>Total Task: <span id="totalTask">50 / 50 / 0</span></p>
-                <p>Completed Today: <span id="completedToday">0 / 0 / 0</span></p>
-                <p>To Be Done: <span id="toBeDone">50 / 50 / 0</span></p>
-            </div>
+            <p>Total Review Words Percentage:
+                <select onchange="updateReviewPer(this.value)">
+                    <option value="0">0%</option>
+                    <option value="20" selected>20%</option>
+                    <option value="30">30%</option>
+                    <option value="40">40%</option>
+                    <option value="50">50%</option>
+                </select>
+            </p>
         </div>
         <div class="button-container">
             <button onclick="viewWords()">View Words</button>
