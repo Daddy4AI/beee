@@ -150,8 +150,8 @@
         function updateStats() {
             totalReviewWords = Math.floor(totalWordsToday * reviewPer / 100);
             totalNewWords = totalWordsToday - totalReviewWords;
-            newwordsComp = wordList.filter(word => word.lastTested && new Date(word.lastTested).toDateString() === new Date().toDateString()).length;
-            reviewWordsComp = wordReview.filter(word => word.lastTested && new Date(word.lastTested).toDateString() === new Date().toDateString()).length;
+            newwordsComp = wordList.filter(word => word.lastTested && new Date(convertToHongKongTime(word.lastTested)).toDateString() === new Date(convertToHongKongTime(new Date().toISOString())).toDateString()).length;
+            reviewWordsComp = wordReview.filter(word => word.lastTested && new Date(convertToHongKongTime(word.lastTested)).toDateString() === new Date(convertToHongKongTime(new Date().toISOString())).toDateString()).length;
             wordsComp = newwordsComp + reviewWordsComp;
             newwordsTobedone = totalNewWords - newwordsComp;
             reviewWordsTobedone = totalReviewWords - reviewWordsComp;
@@ -168,6 +168,11 @@
             document.getElementById('toBeDone').innerText = `${wordsTobedone}`;
             document.getElementById('newWordsTobedone').innerText = `${newwordsTobedone}`;
             document.getElementById('reviewWordsTobedone').innerText = `${reviewWordsTobedone}`;
+        }
+
+        function convertToHongKongTime(utcDateString) {
+            const utcDate = new Date(utcDateString);
+            return new Date(utcDate.toLocaleString("en-US", { timeZone: "Asia/Hong_Kong" }));
         }
 
         window.updateReviewPer = function(value) {
@@ -201,7 +206,7 @@
         function displayTestDates() {
             const dates = {};
             wordList.forEach(word => {
-                const date = word.lastTested ? word.lastTested.split('T')[0] : 'N/A';
+                const date = word.lastTested ? convertToHongKongTime(word.lastTested).toISOString().split('T')[0] : 'N/A';
                 dates[date] = (dates[date] || 0) + 1;
             });
 
@@ -219,11 +224,11 @@
         }
 
         window.viewWords = function() {
-            const wordTable = document.getElementById('wordTable');
             if (wordTableVisible) {
-                wordTable.innerHTML = '';
+                document.getElementById('wordTable').innerHTML = '';
                 wordTableVisible = false;
             } else {
+                const wordTable = document.getElementById('wordTable');
                 const sortedWordList = sortWords(wordList);
                 const sortedWordReview = sortWords(wordReview);
 
