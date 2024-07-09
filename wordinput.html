@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Manage Word Lists</title>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import { getDatabase, ref, get, update, remove } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js';
+    import firebaseConfig from './firebaseConfig.js';
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    function getSelectedList() {
+      return document.getElementById('listSelector').value;
+    }
+
+    function populateListSelector() {
+      const rootRef = ref(database);
+      get(rootRef).then(snapshot => {
+        const data = snapshot.val() || {};
+        const listSelector = document.getElementById('listSelector');
+        listSelector.innerHTML = ''; // Clear existing options
+        Object.keys(data).forEach(listName => {
+          const option = document.createElement('option');
+          option.value = listName;
+          option.textContent = listName;
+          listSelector.appendChild(option);
+        });
+      }).catch(error => {
+        console.error("Error fetching word lists: ", error);
+      });
+    }
+
+    window.clearWordlist = function() {
+      const selectedList = getSelectedList();
+      const wordListRef = ref(database, selectedList);
+      remove(wordListRef).then(() => {
+        document.getElementById('status').innerText = 'Wordlist cleared successfully';
+      }).catch(error => {
+        console.error("Error clearing wordlist: ", error);
+      });
+    };
+
+    window.uploadWords = function() {
+      const file = document.getElementById('wordFile').files[0];
+      const reader = new FileReader();
+      const selectedList = getSelectedList();
+
+      reader.onload = function(event) {
+        const words = event.target.result.split('\n').map(word => word.trim()).filter(word => word);
+        const updates = {};
+
+        words.forEach((word, index) => {
+          updates[`/${selectedList}/${index}`] = word;
+        });
+
+        update(ref(database), updates).then(() => {
+          document.getElementById('status').innerText = 'Words uploaded successfully';
+        }).catch(error => {
+          console.error("Error uploading words: ", error);
+        });
+      };
+
+      reader.readAsText(file);
+    };
+
+    window.retrieveWordList = function() {
+      const selectedList = getSelectedList();
+      const wordListRef = ref(database, selectedList);
+      get(wordListRef).then(snapshot => {
+        const words = snapshot.val() || {};
+        const output = Object.values(words).map((word, index) => {
+          return `Word ${index + 1}: ${word}`;
+        }).join('<br>');
+        document.getElementById('wordListDisplay').innerHTML = output;
+      }).catch(error => {
+        console.error("Error retrieving word list: ", error);
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', populateListSelector);
+  </script>
+  <style>
+    body {
+      position: relative;
+    }
+    #version {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-size: 16px;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <h1>Manage Word Lists</h1>
+  <select id="listSelector">
+    <!-- Options will be populated dynamically -->
+  </select>
+  <br><br>
+  <input type="file" id="wordFile" accept=".txt">
+  <button onclick="uploadWords()">Upload Words</button>
+  <br><br>
+  <button onclick="clearWordlist()">Clear Wordlist</button>
+  <br><br>
+  <button onclick="retrieveWordList()">Retrieve Word List</button>
+  <p id="status"></p>
+  <div id="wordListDisplay"></div>
+  <div id="version">Version 100</div>
+</body>
+</html>
