@@ -290,7 +290,10 @@
                     }
 
                     if (currentWordIndex < words.length) {
-                        setTimeout(displayWord, 3000);
+                        setTimeout(() => {
+                            displayWord();
+                            playWord(words[currentWordIndex].word);
+                        }, 3000);
                     } else {
                         saveIncorrectWords();
                         showCompletionMessage();
