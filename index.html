@@ -68,15 +68,15 @@
         #wordTable th:nth-child(2), #wordTable td:nth-child(2) {
             width: 40%;
         }
-        #wordTable th:nth-child(1), #wordTable th:nth-child(3), #wordTable th:nth-child(4),
-        #wordTable td:nth-child(1), #wordTable td:nth-child(3), #wordTable td:nth-child(4) {
+        #wordTable th:nth-child(1), #wordTable th:nth.child(3), #wordTable th:nth.child(4),
+        #wordTable td:nth.child(1), #wordTable td:nth.child(3), #wordTable td:nth.child(4) {
             width: 20%;
         }
-        #progressReviewTable th:nth-child(1), #progressReviewTable td:nth-child(1),
-        #testDatesTable th:nth-child(1), #testDatesTable td:nth.child(1) {
+        #progressReviewTable th:nth.child(1), #progressReviewTable td:nth.child(1),
+        #testDatesTable th:nth.child(1), #testDatesTable td:nth.child(1) {
             width: 40%;
         }
-        #progressReviewTable th:nth-child(2), #progressReviewTable td:nth.child(2),
+        #progressReviewTable th:nth.child(2), #progressReviewTable td:nth.child(2),
         #testDatesTable th:nth.child(2), #testDatesTable td:nth.child(2) {
             width: 60%;
         }
@@ -118,6 +118,7 @@
         let reviewWordsTobedone = totalReviewWords;
         let wordTableVisible = false;
         let testedWords = [];
+        let testedWordsTableVisible = false;
 
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('loading').style.display = 'block';
@@ -331,21 +332,32 @@
 
         window.viewTestedWords = function() {
             const testedWordsTable = document.getElementById('testedWordsTable');
+
+            if (testedWordsTableVisible) {
+                testedWordsTable.style.display = 'none';
+                testedWordsTableVisible = false;
+                return;
+            }
+
             testedWordsTable.innerHTML = '<tr><th>Index</th><th>Word</th><th>Tested Time</th><th>Number of Tests</th></tr>';
 
             testedWords.forEach(word => {
-                const row = testedWordsTable.insertRow();
-                const cell1 = row.insertCell(0);
-                const cell2 = row.insertCell(1);
-                const cell3 = row.insertCell(2);
-                const cell4 = row.insertCell(3);
-                cell1.textContent = word.index + 1;
-                cell2.textContent = word.word;
-                cell3.textContent = word.lastTested;
-                cell4.textContent = `${word.correctCount}/${word.incorrectCount}/${word.totalTests}`;
+                const isInWordList = wordList.some(w => w.word === word.word);
+                if (isInWordList || !newlyAddedToReview.has(word.word)) {
+                    const row = testedWordsTable.insertRow();
+                    const cell1 = row.insertCell(0);
+                    const cell2 = row.insertCell(1);
+                    const cell3 = row.insertCell(2);
+                    const cell4 = row.insertCell(3);
+                    cell1.textContent = isInWordList ? wordList.find(w => w.word === word.word).index + 1 : wordReview.find(w => w.word === word.word).index + 1;
+                    cell2.textContent = word.word;
+                    cell3.textContent = word.lastTested;
+                    cell4.textContent = `${word.correctCount}/${word.incorrectCount}/${word.totalTests}`;
+                }
             });
 
             testedWordsTable.style.display = 'table';
+            testedWordsTableVisible = true;
         };
     </script>
 </head>
