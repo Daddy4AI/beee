@@ -171,13 +171,35 @@
         }
 
         function updateStats() {
-            totalReviewWords = Math.floor(totalWordsToday * reviewPer / 100);
-            totalNewWords = totalWordsToday - totalReviewWords;
-            newwordsComp = wordList.filter(word => word.lastTested && new Date(convertToHongKongTime(word.lastTested)).toDateString() === new Date(convertToHongKongTime(new Date().toISOString())).toDateString()).length;
-            reviewWordsComp = wordReview.filter(word => word.lastTested && new Date(convertToHongKongTime(word.lastTested)).toDateString() === new Date(convertToHongKongTime(new Date().toISOString())).toDateString()).length;
+            const testedTodaySet = new Set();
+            const newlyAddedToReview = new Set();
+
+            // Add words tested today from wordList to testedTodaySet
+            wordList.forEach(word => {
+                if (word.lastTested && new Date(convertToHongKongTime(word.lastTested)).toDateString() === new Date(convertToHongKongTime(new Date().toISOString())).toDateString()) {
+                    testedTodaySet.add(word.word);
+                }
+            });
+
+            // Identify words that were newly added to wordReview today
+            wordReview.forEach(word => {
+                if (word.lastTested && new Date(convertToHongKongTime(word.lastTested)).toDateString() === new Date(convertToHongKongTime(new Date().toISOString())).toDateString() &&
+                    !wordList.some(w => w.word === word.word)) {
+                    newlyAddedToReview.add(word.word);
+                }
+            });
+
+            // Calculate newwordsComp
+            newwordsComp = Array.from(testedTodaySet).filter(word => wordList.some(w => w.word === word)).length;
+
+            // Calculate reviewWordsComp excluding words from wordList
+            reviewWordsComp = Array.from(testedTodaySet).filter(word =>
+                wordReview.some(w => w.word === word && !newlyAddedToReview.has(word))
+            ).length;
+
             wordsComp = newwordsComp + reviewWordsComp;
-            newwordsTobedone = totalNewWords - newwordsComp;
-            reviewWordsTobedone = totalReviewWords - reviewWordsComp;
+            newwordsTobedone = Math.max(totalNewWords - newwordsComp, 0);
+            reviewWordsTobedone = Math.max(totalReviewWords - reviewWordsComp, 0);
             wordsTobedone = newwordsTobedone + reviewWordsTobedone;
 
             document.getElementById('totalTask').innerText = `${totalWordsToday}`;
@@ -308,15 +330,17 @@
             testedWordsTable.innerHTML = '<tr><th>Index</th><th>Word</th><th>Tested Time</th><th>Number of Tests</th></tr>';
 
             testedWords.forEach(word => {
-                const row = testedWordsTable.insertRow();
-                const cell1 = row.insertCell(0);
-                const cell2 = row.insertCell(1);
-                const cell3 = row.insertCell(2);
-                const cell4 = row.insertCell(3);
-                cell1.textContent = word.index + 1;
-                cell2.textContent = word.word;
-                cell3.textContent = word.lastTested;
-                cell4.textContent = `${word.correctCount}/${word.incorrectCount}/${word.totalTests}`;
+                if (!newlyAddedToReview.has(word.word)) {
+                    const row = testedWordsTable.insertRow();
+                    const cell1 = row.insertCell(0);
+                    const cell2 = row.insertCell(1);
+                    const cell3 = row.insertCell(2);
+                    const cell4 = row.insertCell(3);
+                    cell1.textContent = word.index + 1;
+                    cell2.textContent = word.word;
+                    cell3.textContent = word.lastTested;
+                    cell4.textContent = `${word.correctCount}/${word.incorrectCount}/${word.totalTests}`;
+                }
             });
 
             testedWordsTable.style.display = 'table';
