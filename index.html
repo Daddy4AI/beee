@@ -73,11 +73,11 @@
             width: 20%;
         }
         #progressReviewTable th:nth-child(1), #progressReviewTable td:nth-child(1),
-        #testDatesTable th:nth-child(1), #testDatesTable td:nth-child(1) {
+        #testDatesTable th:nth-child(1), #testDatesTable td:nth.child(1) {
             width: 40%;
         }
-        #progressReviewTable th:nth-child(2), #progressReviewTable td:nth-child(2),
-        #testDatesTable th:nth-child(2), #testDatesTable td:nth-child(2) {
+        #progressReviewTable th:nth-child(2), #progressReviewTable td:nth.child(2),
+        #testDatesTable th:nth.child(2), #testDatesTable td:nth.child(2) {
             width: 60%;
         }
         #testedWordsTable {
@@ -184,7 +184,7 @@
             // Identify words that were newly added to wordReview today
             wordReview.forEach(word => {
                 if (word.lastTested && new Date(convertToHongKongTime(word.lastTested)).toDateString() === new Date(convertToHongKongTime(new Date().toISOString())).toDateString() &&
-                    !wordList.some(w => w.word === word.word)) {
+                    wordList.some(w => w.word === word.word)) {
                     newlyAddedToReview.add(word.word);
                 }
             });
@@ -192,7 +192,7 @@
             // Calculate newwordsComp
             newwordsComp = Array.from(testedTodaySet).filter(word => wordList.some(w => w.word === word)).length;
 
-            // Calculate reviewWordsComp excluding words from wordList
+            // Calculate reviewWordsComp excluding words newly added to wordReview today
             reviewWordsComp = Array.from(testedTodaySet).filter(word =>
                 wordReview.some(w => w.word === word && !newlyAddedToReview.has(word))
             ).length;
@@ -222,6 +222,8 @@
 
         window.updateReviewPer = function(value) {
             reviewPer = parseInt(value);
+            totalReviewWords = Math.floor(totalWordsToday * reviewPer / 100);
+            totalNewWords = totalWordsToday - totalReviewWords;
             updateStats();
             if (wordTableVisible) {
                 viewWords();
@@ -230,6 +232,8 @@
 
         window.updateTotalWordsToday = function(value) {
             totalWordsToday = parseInt(value);
+            totalReviewWords = Math.floor(totalWordsToday * reviewPer / 100);
+            totalNewWords = totalWordsToday - totalReviewWords;
             updateStats();
             if (wordTableVisible) {
                 viewWords();
@@ -330,17 +334,15 @@
             testedWordsTable.innerHTML = '<tr><th>Index</th><th>Word</th><th>Tested Time</th><th>Number of Tests</th></tr>';
 
             testedWords.forEach(word => {
-                if (!newlyAddedToReview.has(word.word)) {
-                    const row = testedWordsTable.insertRow();
-                    const cell1 = row.insertCell(0);
-                    const cell2 = row.insertCell(1);
-                    const cell3 = row.insertCell(2);
-                    const cell4 = row.insertCell(3);
-                    cell1.textContent = word.index + 1;
-                    cell2.textContent = word.word;
-                    cell3.textContent = word.lastTested;
-                    cell4.textContent = `${word.correctCount}/${word.incorrectCount}/${word.totalTests}`;
-                }
+                const row = testedWordsTable.insertRow();
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+                const cell3 = row.insertCell(2);
+                const cell4 = row.insertCell(3);
+                cell1.textContent = word.index + 1;
+                cell2.textContent = word.word;
+                cell3.textContent = word.lastTested;
+                cell4.textContent = `${word.correctCount}/${word.incorrectCount}/${word.totalTests}`;
             });
 
             testedWordsTable.style.display = 'table';
