@@ -80,6 +80,22 @@
         #testDatesTable th:nth-child(2), #testDatesTable td:nth-child(2) {
             width: 60%;
         }
+        #testedWordsTable {
+            width: 80%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            margin-left: auto;
+            margin-right: auto;
+            display: none;
+        }
+        #testedWordsTable th, #testedWordsTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        #testedWordsTable th {
+            background-color: #f2f2f2;
+        }
     </style>
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
@@ -101,6 +117,7 @@
         let newwordsTobedone = totalNewWords;
         let reviewWordsTobedone = totalReviewWords;
         let wordTableVisible = false;
+        let testedWords = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('loading').style.display = 'block';
@@ -125,11 +142,17 @@
 
             const wordDataPromises = allWords.map((word, index) => get(child(testResultsRef, word)).then(snapshot => {
                 const resultData = snapshot.val() || { correctCount: 0, incorrectCount: 0, totalTests: 0, lastTested: null };
+                if (resultData.lastTested && new Date(resultData.lastTested).toDateString() === new Date().toDateString()) {
+                    testedWords.push({ word, index, ...resultData });
+                }
                 return { word, index, ...resultData };
             }));
 
             const wordReviewDataPromises = wordReview.map((word, index) => get(child(testResultsRef, word)).then(snapshot => {
                 const resultData = snapshot.val() || { correctCount: 0, incorrectCount: 0, totalTests: 0, lastTested: null };
+                if (resultData.lastTested && new Date(resultData.lastTested).toDateString() === new Date().toDateString()) {
+                    testedWords.push({ word, index, ...resultData });
+                }
                 return { word, index, ...resultData };
             }));
 
@@ -279,6 +302,25 @@
             document.getElementById('cover').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
         }
+
+        window.viewTestedWords = function() {
+            const testedWordsTable = document.getElementById('testedWordsTable');
+            testedWordsTable.innerHTML = '<tr><th>Index</th><th>Word</th><th>Tested Time</th><th>Number of Tests</th></tr>';
+
+            testedWords.forEach(word => {
+                const row = testedWordsTable.insertRow();
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+                const cell3 = row.insertCell(2);
+                const cell4 = row.insertCell(3);
+                cell1.textContent = word.index + 1;
+                cell2.textContent = word.word;
+                cell3.textContent = word.lastTested;
+                cell4.textContent = `${word.correctCount}/${word.incorrectCount}/${word.totalTests}`;
+            });
+
+            testedWordsTable.style.display = 'table';
+        };
     </script>
 </head>
 <body>
@@ -345,8 +387,10 @@
             <div class="button-container">
                 <button onclick="viewWords()">View Words</button>
                 <button onclick="startTest()">Start Test</button>
+                <button onclick="viewTestedWords()">Tested Words</button>
             </div>
             <table id="wordTable"></table>
+            <table id="testedWordsTable"></table>
         </section>
 
         <section>
