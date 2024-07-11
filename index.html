@@ -140,8 +140,10 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('loading').style.display = 'block';
+            setButtonsDisabled(true); // 禁用按钮
             await fetchData();
             document.getElementById('loading').style.display = 'none';
+            setButtonsDisabled(false); // 启用按钮
             updateStats();
             displayProgressReview();
         });
@@ -217,8 +219,19 @@
             ).length;
 
             wordsComp = newwordsComp + reviewWordsComp;
-            newwordsTobedone = Math.max(totalNewWords - newwordsComp, 0);
-            reviewWordsTobedone = Math.max(totalReviewWords - reviewWordsComp, 0);
+            updateWordCounts();
+        }
+
+        function updateWordCounts() {
+            const notTestedWords = wordList.filter(word => !word.lastTested).length;
+
+            if (newwordsTobedone > notTestedWords) {
+                newwordsTobedone = notTestedWords;
+                reviewWordsTobedone = totalWordsToday - wordsComp - newwordsTobedone;
+            } else {
+                newwordsTobedone = Math.max(totalNewWords - newwordsComp, 0);
+                reviewWordsTobedone = Math.max(totalReviewWords - reviewWordsComp, 0);
+            }
             wordsTobedone = newwordsTobedone + reviewWordsTobedone;
 
             document.getElementById('totalTask').innerText = `${totalWordsToday}`;
@@ -386,6 +399,12 @@
             testedWordsTable.style.display = 'table';
             testedWordsTableVisible = true;
         };
+
+        function setButtonsDisabled(disabled) {
+            document.querySelectorAll('.button-container button').forEach(button => {
+                button.disabled = disabled;
+            });
+        }
     </script>
 </head>
 <body>
